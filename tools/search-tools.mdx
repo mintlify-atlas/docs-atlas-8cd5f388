@@ -1,0 +1,69 @@
+---
+title: "Search Tools"
+description: "Tools for searching files and content across your codebase."
+---
+
+Search tools let Claude navigate large codebases efficiently using pattern matching and content search.
+
+## GlobTool
+
+Finds files matching a glob pattern. Returns paths sorted by modification time — most recently modified first.
+
+**Usage pattern:**
+```
+> Find all React component files
+> List every test file in the project
+> Show me all configuration files
+```
+
+**Common patterns:**
+
+| Pattern | Matches |
+|---------|---------|
+| `**/*.ts` | All TypeScript files |
+| `src/**/*.test.ts` | Test files under src/ |
+| `**/*.{json,yaml,yml}` | JSON and YAML files |
+| `**/index.{ts,tsx,js}` | Index files |
+| `**/.env*` | Environment files |
+
+## GrepTool
+
+Searches file contents using regular expressions, powered by ripgrep. Returns file paths and line numbers for all matches, sorted by modification time.
+
+**Usage pattern:**
+```
+> Find all places where we call the auth API
+> Search for TODO comments in the codebase
+> Where is the `parseToken` function defined?
+> Find all usages of the deprecated `fetch` wrapper
+```
+
+**Real-world examples:**
+```
+> Find all console.log statements in src/
+> Where is DATABASE_URL used?
+> Search for any hardcoded API keys
+```
+
+**Regex support:**
+
+GrepTool supports full regex syntax:
+```
+log.*Error          # Lines containing "log" followed by "Error"
+function\s+\w+      # Function declarations
+import.*from\s+'@   # Imports from scoped packages
+```
+
+<Tip>
+  GrepTool searches file contents. Use GlobTool to find files by name pattern, and GrepTool to find files by content.
+</Tip>
+
+## ToolSearchTool
+
+Deferred tool discovery — searches for available tools (including MCP tools) that match a description. Used internally when Claude needs a capability it doesn't have loaded yet.
+
+This tool runs automatically in the background; you don't invoke it directly.
+
+<Note>
+  For large codebases, Claude often combines GlobTool (to find relevant files) and GrepTool (to find specific patterns within them) in sequence to efficiently locate code without reading every file.
+</Note>

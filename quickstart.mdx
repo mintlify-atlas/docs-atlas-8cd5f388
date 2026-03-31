@@ -1,80 +1,94 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "Quick Start"
+description: "Get up and running with Claude Code in under 5 minutes."
 ---
 
-## Get started in three steps
+## Prerequisites
 
-Get your documentation site running locally and make your first customization.
+- Node.js and npm (for installation), or [Bun](https://bun.sh)
+- An [Anthropic account](https://console.anthropic.com)
 
-### Step 1: Set up your local environment
+## Steps
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+<Steps>
+  <Step title="Install Claude Code">
+    Install the package globally with npm:
 
-### Step 2: Deploy your changes
+    ```bash
+    npm install -g @anthropic-ai/claude-code
+    ```
+  </Step>
+  <Step title="Navigate to your project">
+    Change into the directory you want to work in:
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    ```bash
+    cd your-project
+    ```
+  </Step>
+  <Step title="Launch Claude Code">
+    Start the interactive REPL:
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    ```bash
+    claude
+    ```
+  </Step>
+  <Step title="Authenticate">
+    Inside the REPL, run the login command to sign in with your Anthropic account:
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    ```
+    /login
+    ```
 
-### Step 3: Go live
+    This opens an OAuth 2.0 flow in your browser. Once you complete it, your credentials are stored securely (on macOS, in the Keychain).
+  </Step>
+  <Step title="Try your first task">
+    Ask Claude something about your codebase:
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    ```
+    Explain the main entry point of this codebase
+    ```
 
-## Next steps
+    Claude will read the relevant files and respond with an explanation.
+  </Step>
+</Steps>
 
-Now that you have your docs running, explore these key features:
+## Your first coding task
+
+Once you're authenticated, try any of these prompts to get a feel for what Claude Code can do:
+
+```
+Find all TODO comments in this project and summarize them
+```
+
+```
+Refactor the largest function in this file to be more readable
+```
+
+```
+Write a unit test for the login function
+```
+
+```
+Create a git commit for the changes in my working tree
+```
+
+## Common first commands
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="/doctor" icon="stethoscope">
+    Diagnose and verify your Claude Code installation and settings. Run this if something seems wrong.
+  </Card>
+  <Card title="/help" icon="circle-question">
+    List all available slash commands with their descriptions.
+  </Card>
+  <Card title="/config" icon="gear">
+    View and modify Claude Code settings such as the model, permission mode, and theme.
+  </Card>
+  <Card title="/memory" icon="brain">
+    Manage persistent memory that Claude carries across sessions.
+  </Card>
 </CardGroup>
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  The first time Claude Code invokes a tool (such as running a shell command or writing a file), it will prompt you for permission before proceeding. You can allow or deny each action, and configure how permissions are handled going forward via `/config`.
 </Note>

@@ -1,0 +1,102 @@
+---
+title: "MCP Servers"
+description: "Connect Model Context Protocol servers to extend Claude Code's capabilities."
+---
+
+Model Context Protocol (MCP) lets you connect external tools and data sources to Claude Code. Once connected, Claude can invoke MCP tools just like built-in tools.
+
+## What MCP servers provide
+
+MCP servers expose:
+- **Tools** — Actions Claude can invoke (e.g., query a database, call an API)
+- **Resources** — Data Claude can read (e.g., files, database rows, documents)
+- **Prompts** — Reusable prompt templates
+
+## Managing MCP servers
+
+Use the `/mcp` command to manage server connections:
+
+```
+> /mcp
+```
+
+This opens the MCP management UI where you can add, remove, and inspect connected servers.
+
+## Adding a server
+
+<Steps>
+  <Step title="Run /mcp">
+    ```
+    > /mcp
+    ```
+  </Step>
+  <Step title="Select Add server">
+    Choose the server type: stdio (local process) or HTTP (remote server).
+  </Step>
+  <Step title="Configure the server">
+    For stdio servers, provide the command to launch the server process.
+    For HTTP servers, provide the endpoint URL.
+  </Step>
+  <Step title="Approve the connection">
+    Claude Code will prompt for approval before connecting to a new server.
+  </Step>
+</Steps>
+
+## Server types
+
+### stdio servers
+
+Local processes that communicate over stdin/stdout. Most MCP servers are stdio-based:
+
+```json
+{
+  "command": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/directory"]
+}
+```
+
+### HTTP servers
+
+Remote servers accessible over HTTP/HTTPS. Claude Code connects to the MCP endpoint URL.
+
+## Using MCP tools
+
+Once a server is connected, its tools appear alongside Claude Code's built-in tools. Claude selects the right tool automatically based on context:
+
+```
+> Query the sales database for Q4 revenue by region
+> Search our internal documentation for the deployment process
+> Create a new Jira ticket for the login bug
+```
+
+## Official MCP servers
+
+Claude Code can connect to servers from the official MCP registry. Run `/mcp` to browse available official servers.
+
+Popular official servers include integrations for:
+- Filesystem access
+- GitHub
+- Databases (PostgreSQL, SQLite)
+- Slack
+- Browser automation
+
+## MCP resources
+
+Beyond tools, MCP servers can expose resources that Claude reads directly:
+
+```
+> Read the latest schema from the database MCP server
+> Show me the resources available from the docs server
+```
+
+Use `ListMcpResourcesTool` and `ReadMcpResourceTool` — Claude invokes these automatically when accessing MCP resources.
+
+<Note>
+  MCP server connections are scoped to your user account, not the project. Servers you add are available across all your Claude Code sessions.
+</Note>
+
+## Troubleshooting
+
+Run `/doctor` to check MCP server connectivity. If a server shows as disconnected, verify the server process is running and the configuration is correct.
+
+See [MCP Protocol](/advanced/mcp-protocol) for details on building your own MCP server.

@@ -1,0 +1,89 @@
+---
+title: "Commands Overview"
+description: "All slash commands available in the Claude Code REPL."
+---
+
+Slash commands are invoked with the `/` prefix inside the Claude Code REPL. You can also run them directly from the terminal with `claude /command`.
+
+## Using commands
+
+Type `/` followed by the command name at the REPL prompt:
+
+```
+> /help
+> /doctor
+> /commit
+```
+
+You can also run any command non-interactively:
+
+```bash
+claude /doctor
+claude /review
+```
+
+## Command reference
+
+### Session & navigation
+
+| Command | Description |
+|---------|-------------|
+| `/help` | Show available commands and keyboard shortcuts |
+| `/exit` | Exit the REPL |
+| `/clear` | Clear the conversation and start fresh |
+| `/resume` | Restore a previous conversation session |
+| `/context` | Visualize the current context window usage |
+| `/compact` | Compress conversation history to free up context space |
+
+### Git & code
+
+| Command | Description |
+|---------|-------------|
+| `/commit` | Analyze staged changes and create a commit with a generated message |
+| `/review` | Review current code changes for bugs, style, and best practices |
+| `/diff` | View current git diff |
+| `/pr_comments` | Fetch and display open PR review comments |
+| `/branch` | Create or switch git branches |
+
+### Settings & configuration
+
+| Command | Description |
+|---------|-------------|
+| `/config` | View and set configuration options |
+| `/model` | Switch between Claude models |
+| `/theme` | Change the terminal color theme |
+| `/vim` | Toggle vim keybinding mode |
+| `/effort` | Adjust Claude's reasoning effort level |
+| `/output-style` | Change Claude's response format |
+
+### Memory & context
+
+| Command | Description |
+|---------|-------------|
+| `/memory` | View, add, and manage persistent memory entries |
+| `/cost` | Show token usage and cost for the current session |
+| `/stats` | View session statistics |
+
+### Integrations
+
+| Command | Description |
+|---------|-------------|
+| `/mcp` | Manage MCP server connections |
+| `/skills` | List and manage reusable skill workflows |
+| `/desktop` | Hand off session to the Claude desktop app |
+| `/mobile` | Hand off session to the Claude mobile app |
+| `/share` | Share a session link |
+
+### Diagnostics & auth
+
+| Command | Description |
+|---------|-------------|
+| `/doctor` | Check environment, authentication, and connectivity |
+| `/version` | Show the installed Claude Code version |
+| `/login` | Authenticate with your Anthropic account |
+| `/logout` | Sign out of your Anthropic account |
+| `/upgrade` | Upgrade Claude Code to the latest version |
+
+<Tip>
+  Run `/help` inside the REPL at any time to see a quick reference of all available commands and keyboard shortcuts.
+</Tip>

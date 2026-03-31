@@ -1,0 +1,91 @@
+---
+title: "File Tools"
+description: "Tools for reading, writing, and editing files in your project."
+---
+
+File tools give Claude the ability to read and modify any file in your codebase. Every file operation requires your permission on first use unless you've set a permissive mode.
+
+## FileReadTool
+
+Reads the contents of a file. Supports plain text, source code, images, PDFs, and Jupyter notebooks.
+
+**Usage pattern:**
+```
+> Show me the contents of src/api/auth.ts
+> Read the README and summarize the project
+> What's in the package.json?
+```
+
+**Supported formats:**
+- Plain text and source code (any extension)
+- Images (PNG, JPG, GIF, WebP)
+- PDFs
+- Jupyter notebooks (`.ipynb`)
+
+## FileWriteTool
+
+Creates a new file or overwrites an existing one with complete content.
+
+**Usage pattern:**
+```
+> Create a new file src/utils/logger.ts with a simple logging utility
+> Write a .gitignore for a Node.js project
+```
+
+<Warning>
+  FileWriteTool overwrites the entire file. For partial edits, use FileEditTool instead.
+</Warning>
+
+## FileEditTool
+
+Performs a precise string replacement within a file — replaces an exact `oldString` with a `newString`. This is the primary tool for modifying existing code.
+
+**Usage pattern:**
+```
+> Fix the bug in the parseDate function in src/utils/date.ts
+> Update the API endpoint URL in src/config.ts
+> Rename the variable `usr` to `user` throughout auth.ts
+```
+
+**How it works:**
+1. Claude reads the target file
+2. Identifies the exact string to replace
+3. Substitutes it with the new content
+4. The replacement must be unique — if the string appears multiple times, Claude uses enough surrounding context to identify the correct instance
+
+<Tip>
+  FileEditTool is preferred over FileWriteTool for changes to existing files because it preserves surrounding code and is easier to review.
+</Tip>
+
+## GlobTool
+
+Searches for files matching a glob pattern. Returns matching paths sorted by modification time.
+
+**Usage pattern:**
+```
+> Find all TypeScript files in the src/ directory
+> List all test files
+> Show me every .env file in the project
+```
+
+**Example patterns:**
+```
+src/**/*.ts
+**/*.test.ts
+**/*.{json,yaml}
+src/components/**/*.tsx
+```
+
+## NotebookEditTool
+
+Reads and edits Jupyter notebook (`.ipynb`) files, operating at the cell level.
+
+**Usage pattern:**
+```
+> Add a new code cell to the analysis notebook
+> Fix the import in cell 3 of data_pipeline.ipynb
+```
+
+<Note>
+  All file operations are logged in the session. Use `/diff` to review all changes Claude has made before committing.
+</Note>

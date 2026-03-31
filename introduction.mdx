@@ -1,0 +1,56 @@
+---
+title: "Introduction"
+description: "Claude Code is an agentic CLI coding tool that lives in your terminal, understands your codebase, and helps you code faster."
+---
+
+Claude Code is Anthropic's official CLI tool for software engineering tasks. It runs directly in your terminal and interacts with Claude to edit files, execute shell commands, search your codebase, manage git workflows, and more. Rather than acting as a passive assistant, Claude Code operates as an autonomous agent that takes real actions in your project — reading and writing files, running commands, and coordinating multi-step work.
+
+The tool is built around a conversation loop: you describe what you want, Claude reasons about the best approach, invokes the appropriate tools, and reports results — asking for permission before taking consequential actions. A permission system governs every tool invocation, so you stay in control of what the agent is allowed to do.
+
+## Key capabilities
+
+<CardGroup cols={2}>
+  <Card title="File editing" icon="file-pen">
+    Read, write, and partially modify files across your project, including images, PDFs, and Jupyter notebooks.
+  </Card>
+  <Card title="Shell execution" icon="terminal">
+    Run arbitrary shell commands via `BashTool`, with a configurable permission model that prompts before executing.
+  </Card>
+  <Card title="Codebase search" icon="magnifying-glass">
+    Search file contents with ripgrep (`GrepTool`) and match file paths with glob patterns (`GlobTool`) across repositories of any size.
+  </Card>
+  <Card title="Git workflows" icon="code-branch">
+    Create commits (`/commit`), review pull requests (`/review`), diff changes (`/diff`), and manage git worktrees for isolated parallel work.
+  </Card>
+  <Card title="Multi-agent orchestration" icon="diagram-project">
+    Spawn sub-agents with `AgentTool`, coordinate parallel work with `TeamCreateTool`, and manage tasks across a swarm of agents via the `coordinator/` subsystem.
+  </Card>
+  <Card title="MCP integration" icon="plug">
+    Connect to any Model Context Protocol server to extend Claude Code with custom tools and resources, managed through the `/mcp` command and `MCPTool`.
+  </Card>
+</CardGroup>
+
+## Architecture overview
+
+Claude Code is structured around a React + Ink terminal UI, meaning the interactive REPL and all full-screen interfaces (such as `/doctor` and session choosers) are React component trees rendered to the terminal via [Ink](https://github.com/vadimdemedes/ink). The CLI entry point (`src/main.tsx`) uses Commander.js to parse arguments and subcommands, then hands off to the Ink renderer.
+
+The runtime is [Bun](https://bun.sh), which also handles bundling and dead-code elimination via feature flags (`bun:bundle`). Heavy modules such as OpenTelemetry (~400 KB) and gRPC (~700 KB) are deferred with dynamic `import()` until they are actually needed, keeping startup fast.
+
+All tools and slash commands are self-contained modules registered at startup. Schema validation throughout the codebase uses Zod v4. Two external protocols are integrated: MCP (Model Context Protocol) for connecting to external tool servers, and LSP (Language Server Protocol) for language intelligence.
+
+## Tech stack
+
+| Category | Technology |
+|---|---|
+| Runtime | [Bun](https://bun.sh) |
+| Language | TypeScript (strict) |
+| Terminal UI | [React](https://react.dev) + [Ink](https://github.com/vadimdemedes/ink) |
+| CLI parsing | [Commander.js](https://github.com/tj/commander.js) (extra-typings) |
+| Schema validation | [Zod v4](https://zod.dev) |
+| Code search | [ripgrep](https://github.com/BurntSushi/ripgrep) |
+| Protocols | MCP SDK, LSP |
+| API | [Anthropic SDK](https://docs.anthropic.com) |
+| Telemetry | OpenTelemetry + gRPC |
+| Auth | OAuth 2.0, JWT, macOS Keychain |
+
+Ready to install Claude Code? Head to the [quick start](/quickstart).

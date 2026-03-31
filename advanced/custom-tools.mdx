@@ -1,0 +1,83 @@
+---
+title: "Custom Tools"
+description: "Extend Claude Code with custom tools via plugins and MCP."
+---
+
+You can add custom tools to Claude Code through two mechanisms: the **plugin system** (for tools bundled directly into Claude Code's runtime) and **MCP servers** (for tools exposed by external processes).
+
+## Adding tools via MCP (recommended)
+
+The easiest way to give Claude new capabilities is through an MCP server. MCP tools appear in Claude's tool list just like built-in tools.
+
+**Advantages:**
+- No changes to Claude Code itself
+- Works with any language (Node.js, Python, Go, Rust, etc.)
+- Hot-reloadable without restarting Claude Code
+- Shareable across teams via a central MCP server
+
+See [MCP Protocol](/advanced/mcp-protocol) for a complete guide to building MCP servers.
+
+## Adding tools via plugins
+
+Plugins can register tools that run inside the Claude Code process. This is useful for tools that need deep integration with Claude Code's internals.
+
+Create a plugin in `~/.claude/plugins/my-plugin/`:
+
+```
+my-plugin/
+├── manifest.json
+├── index.js
+└── tools/
+    └── myCustomTool.js
+```
+
+**manifest.json:**
+```json
+{
+  "name": "my-plugin",
+  "version": "1.0.0",
+  "tools": ["tools/myCustomTool.js"]
+}
+```
+
+**tools/myCustomTool.js:**
+```javascript
+module.exports = {
+  name: "my_custom_tool",
+  description: "Does something custom",
+  inputSchema: {
+    type: "object",
+    properties: {
+      input: { type: "string", description: "The input value" }
+    },
+    required: ["input"]
+  },
+  async call({ input }) {
+    // Tool implementation
+    return { output: `Processed: ${input}` };
+  }
+};
+```
+
+Reload after adding:
+```
+> /reload-plugins
+```
+
+## Tool input schemas
+
+All tools — built-in, plugin, and MCP — use JSON Schema for their input definitions. Claude uses these schemas to generate valid inputs.
+
+**Schema best practices:**
+- Write clear `description` fields — Claude uses them to decide when to use the tool
+- Use `required` to mark mandatory fields
+- Use `enum` to constrain allowed values
+- Add `default` values where appropriate
+
+## AskUserQuestionTool
+
+Claude Code also has an `AskUserQuestionTool` for tools that need to interactively ask the user for input mid-execution. Custom tools can trigger this pattern by returning a question response that Claude translates into a user prompt.
+
+<Tip>
+  For most use cases, MCP is the better choice for custom tools. The plugin API is more powerful but more complex, and it requires familiarity with Claude Code's internals.
+</Tip>

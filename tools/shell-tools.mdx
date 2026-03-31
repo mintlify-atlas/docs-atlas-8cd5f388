@@ -1,0 +1,61 @@
+---
+title: "Shell Tools"
+description: "Tools for executing shell commands and interacting with the system."
+---
+
+Shell tools let Claude run commands on your machine. Every command is shown to you before execution and requires your approval (unless you've enabled auto-approval).
+
+## BashTool
+
+Executes a shell command in your environment. This is the most powerful tool — it can run test suites, build scripts, package managers, git commands, and anything else your shell supports.
+
+**Usage pattern:**
+```
+> Run the test suite
+> Install the missing dependency
+> Build the project and show me any errors
+> Run `npm run lint` and fix the issues it finds
+```
+
+**What Claude uses it for:**
+- Running tests: `npm test`, `pytest`, `cargo test`
+- Building: `npm run build`, `make`, `gradle build`
+- Package management: `npm install`, `pip install`, `cargo add`
+- Git operations: `git status`, `git log`, `git stash`
+- File system operations: `mkdir`, `cp`, `mv`
+- Any other shell command
+
+<Warning>
+  BashTool can execute any shell command. Claude will always show you the command before running it. Review carefully — especially commands that delete files or make network requests.
+</Warning>
+
+**Permission behavior:**
+- First use: Claude shows the command and asks for approval
+- You can approve once, approve always for a pattern, or deny
+- In plan mode, BashTool commands are planned but not executed until you confirm
+
+## PowerShellTool
+
+On Windows, PowerShellTool runs commands in a PowerShell session instead of bash.
+
+**Usage pattern:**
+```
+> List files in the current directory
+> Run the build script
+```
+
+**Behavior:** Same permission model as BashTool. Claude selects the appropriate shell tool based on the detected platform.
+
+## REPLTool
+
+Runs code in an interactive REPL session that persists across calls within a conversation. Useful for iterative evaluation and exploration.
+
+**Usage pattern:**
+```
+> Evaluate this TypeScript snippet
+> Test this regular expression against sample data
+```
+
+<Tip>
+  For quick one-off evaluations, Claude often uses BashTool with `node -e` or similar. REPLTool is used when state needs to persist across multiple evaluations.
+</Tip>

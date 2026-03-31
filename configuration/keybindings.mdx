@@ -1,0 +1,75 @@
+---
+title: "Keybindings"
+description: "Keyboard shortcuts for the Claude Code REPL."
+---
+
+Claude Code supports a full set of keyboard shortcuts for navigating the REPL efficiently. Run `/help` inside the REPL to see the current keybinding reference.
+
+## Default keybindings
+
+### Input & editing
+
+| Key | Action |
+|-----|--------|
+| `Enter` | Send message |
+| `Shift+Enter` | Insert newline |
+| `Ctrl+C` | Cancel current request or clear input |
+| `Ctrl+D` | Exit Claude Code |
+| `Ctrl+L` | Clear the screen |
+| `Tab` | Accept autocomplete suggestion |
+| `Ctrl+Z` | Undo last input edit |
+
+### History navigation
+
+| Key | Action |
+|-----|--------|
+| `↑` / `↓` | Navigate input history |
+| `Ctrl+R` | Search input history |
+
+### REPL navigation
+
+| Key | Action |
+|-----|--------|
+| `Ctrl+P` | Open command palette / list available actions |
+| `Esc` | Cancel current operation |
+
+### Multi-line input
+
+| Key | Action |
+|-----|--------|
+| `Shift+Enter` | Add a new line in the input box |
+
+## Vim mode
+
+Enable vim keybindings with `/vim`. In vim mode, the input prompt gains a modal interface:
+
+### Normal mode
+
+| Key | Action |
+|-----|--------|
+| `h j k l` | Move cursor left/down/up/right |
+| `w b` | Move by word forward/backward |
+| `0` / `$` | Go to start/end of line |
+| `gg` / `G` | Go to start/end of input |
+| `i` / `a` | Enter insert mode |
+| `A` | Enter insert mode at end of line |
+| `o` | Open new line and enter insert mode |
+| `d d` | Delete current line |
+| `y y` | Yank (copy) current line |
+| `p` | Paste |
+| `u` | Undo |
+| `Ctrl+R` | Redo |
+| `/` | Search within input |
+| `Esc` | Return to normal mode |
+
+### Insert mode
+
+Standard text input. Press `Esc` to return to normal mode.
+
+## Custom keybindings
+
+Keybindings can be customized via `/keybindings` (if available on your version) or by editing the keybindings configuration file in `~/.claude/keybindings.json`.
+
+<Tip>
+  Press `Ctrl+P` at any time inside the Claude Code REPL to open the command palette and see all available actions with their current keybindings.
+</Tip>

@@ -1,0 +1,115 @@
+---
+title: "MCP Protocol"
+description: "Build and connect Model Context Protocol servers to Claude Code."
+---
+
+The Model Context Protocol (MCP) is an open protocol for connecting AI models to external tools and data sources. Claude Code implements MCP as both a client (connecting to MCP servers) and uses MCP-compatible patterns internally.
+
+## MCP concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Server** | A process that exposes tools, resources, and prompts |
+| **Tool** | An action the model can invoke (e.g., query a database) |
+| **Resource** | Data the model can read (e.g., a file, a DB row) |
+| **Prompt** | A reusable prompt template |
+| **Transport** | How the server communicates: stdio or HTTP |
+
+## Building an MCP server
+
+Create an MCP server using the official MCP SDK:
+
+```bash
+npm install @modelcontextprotocol/sdk
+```
+
+```typescript server.ts
+import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
+
+const server = new Server(
+  { name: "my-mcp-server", version: "1.0.0" },
+  { capabilities: { tools: {} } }
+);
+
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools: [
+    {
+      name: "query_database",
+      description: "Query the application database",
+      inputSchema: {
+        type: "object",
+        properties: {
+          sql: { type: "string", description: "SQL query to execute" },
+        },
+        required: ["sql"],
+      },
+    },
+  ],
+}));
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  if (request.params.name === "query_database") {
+    const { sql } = request.params.arguments as { sql: string };
+    // Execute query and return results
+    return { content: [{ type: "text", text: JSON.stringify(results) }] };
+  }
+});
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+## Connecting your server to Claude Code
+
+Add the server via `/mcp`:
+
+```
+> /mcp
+```
+
+Select "Add server" and provide:
+- **Type**: stdio
+- **Command**: `node server.js` (or however you launch the server)
+
+## Exposing resources
+
+Resources let Claude read data from your server:
+
+```typescript
+import { ListResourcesRequestSchema, ReadResourceRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+
+server.setRequestHandler(ListResourcesRequestSchema, async () => ({
+  resources: [
+    {
+      uri: "db://schema",
+      name: "Database schema",
+      mimeType: "text/plain",
+    },
+  ],
+}));
+
+server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+  if (request.params.uri === "db://schema") {
+    return {
+      contents: [{ uri: "db://schema", mimeType: "text/plain", text: schemaText }],
+    };
+  }
+});
+```
+
+Claude Code accesses resources via `ListMcpResourcesTool` and `ReadMcpResourceTool`.
+
+## Authentication
+
+For HTTP-based MCP servers, Claude Code supports the `McpAuthTool` for authentication flows. For local stdio servers, no authentication is needed — the server runs as a local process.
+
+<Note>
+  The MCP SDK handles protocol framing, serialization, and transport. You only need to implement the handlers for your specific tools and resources.
+</Note>
+
+For more on connecting servers, see [MCP Servers](/configuration/mcp-servers).

@@ -1,0 +1,57 @@
+---
+title: "IDE Integration"
+description: "Connect Claude Code to VS Code and JetBrains IDEs for a seamless coding experience."
+---
+
+Claude Code includes a bridge system that connects to IDE extensions, enabling bidirectional communication between the CLI and your editor. This lets Claude see your current file, selection, and cursor position — and navigate your IDE directly.
+
+## How the bridge works
+
+The bridge (`src/bridge/`) establishes a communication channel between the Claude Code CLI and IDE extensions using a local socket. The IDE extension sends context (open file, selection, cursor) to Claude Code, and Claude Code can trigger IDE actions (open files, show diffs, navigate to definitions).
+
+**Key components:**
+- `bridgeMain.ts` — Main bridge event loop
+- `bridgeMessaging.ts` — Message protocol between CLI and IDE
+- `replBridge.ts` — Bridges the REPL session to the IDE
+- `jwtUtils.ts` — JWT-based auth for the bridge connection
+- `sessionRunner.ts` — Manages session execution through the bridge
+
+## Capabilities
+
+With an IDE extension connected, Claude Code gains:
+
+<CardGroup cols={2}>
+  <Card title="File context" icon="file-code">
+    Claude sees your currently open file and cursor position without you needing to paste it
+  </Card>
+  <Card title="Selection awareness" icon="text-slash">
+    Highlight code and Claude works on exactly that selection
+  </Card>
+  <Card title="Navigate to code" icon="arrow-pointer">
+    Claude can open files and jump to specific lines in your editor
+  </Card>
+  <Card title="Inline diffs" icon="code-compare">
+    View Claude's proposed changes as diffs directly in the IDE
+  </Card>
+</CardGroup>
+
+## Supported IDEs
+
+- [VS Code](/advanced/vscode) — via the Claude Code VS Code extension
+- [JetBrains](/advanced/jetbrains) — via the Claude Code JetBrains plugin (IntelliJ IDEA, WebStorm, PyCharm, GoLand, etc.)
+
+## Using the bridge
+
+Once the IDE extension is installed and connected:
+
+```
+> Explain the function my cursor is on
+> Refactor the selected code to use async/await
+> Fix the error on line 42 of the current file
+```
+
+Claude automatically uses the IDE context — you don't need to paste file contents or specify paths when working on the open file.
+
+<Note>
+  The bridge connection uses a local socket and JWT authentication. No code leaves your machine through the bridge — it's a local communication channel only.
+</Note>

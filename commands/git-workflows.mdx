@@ -1,0 +1,95 @@
+---
+title: "Git Workflows"
+description: "Automate commits, diffs, and PR reviews with Claude Code."
+---
+
+Claude Code has deep git integration. You can use slash commands for structured git operations or just describe what you want in natural language.
+
+## Committing changes
+
+The `/commit` command analyzes your staged changes and generates a commit message.
+
+<Steps>
+  <Step title="Stage your changes">
+    Use git as normal to stage files:
+    ```bash
+    git add src/api/users.ts
+    git add src/api/auth.ts
+    ```
+  </Step>
+  <Step title="Run /commit">
+    Inside the Claude Code REPL:
+    ```
+    > /commit
+    ```
+    Claude analyzes the diff and proposes a commit message.
+  </Step>
+  <Step title="Confirm or edit">
+    Review the proposed message, edit if needed, then confirm to create the commit.
+  </Step>
+</Steps>
+
+You can also describe commits naturally:
+
+```
+> Commit my changes with a message that explains I'm adding JWT refresh token support
+```
+
+## Viewing diffs
+
+The `/diff` command shows your current working tree or staged changes:
+
+```
+> /diff
+```
+
+You can also ask Claude to explain a diff:
+
+```
+> Explain what changed in the last commit
+> What does this diff do?
+```
+
+## Branch management
+
+Use `/branch` to create and switch branches:
+
+```
+> /branch feature/add-oauth
+> /branch fix/login-timeout
+```
+
+Or naturally:
+
+```
+> Create a new branch called feature/user-profiles
+> Switch to the main branch
+```
+
+## Reviewing PR comments
+
+The `/pr_comments` command fetches open review comments from your current GitHub PR:
+
+```
+> /pr_comments
+```
+
+Claude displays each comment with context and can help you address them:
+
+```
+> Address the PR comment about input validation in the user controller
+```
+
+## Worktree isolation
+
+For large refactors, Claude Code supports git worktrees to isolate changes:
+
+```
+> Enter worktree mode for my refactoring task
+```
+
+This uses `EnterWorktreeTool` to create an isolated git worktree. Exit with `ExitWorktreeTool` when done.
+
+<Tip>
+  For complex multi-file changes, stage interactively with `git add -p` before running `/commit` so Claude generates a focused, accurate message.
+</Tip>

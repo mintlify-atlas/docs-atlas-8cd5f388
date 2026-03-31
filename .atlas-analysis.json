@@ -1,0 +1,132 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "Claude Code",
+  "projectDescription": "An agentic CLI coding tool powered by Claude that understands your codebase and helps you code faster through natural language — editing files, running commands, and managing git workflows directly from your terminal.",
+  "theme": "luma",
+  "primaryColor": "#7c7c7c",
+  "lightColor": "#0a0a0a",
+  "darkColor": "#c7c7c7",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/how-it-works",
+              "concepts/tool-system",
+              "concepts/permissions",
+              "concepts/memory"
+            ]
+          },
+          {
+            "group": "Commands",
+            "pages": [
+              "commands/overview",
+              "commands/git-workflows",
+              "commands/code-review",
+              "commands/configuration"
+            ]
+          },
+          {
+            "group": "Tools Reference",
+            "pages": [
+              "tools/file-tools",
+              "tools/shell-tools",
+              "tools/search-tools",
+              "tools/agent-tools",
+              "tools/web-tools"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/settings",
+              "configuration/mcp-servers",
+              "configuration/keybindings"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Advanced",
+        "groups": [
+          {
+            "group": "IDE Integration",
+            "pages": [
+              "advanced/ide-integration",
+              "advanced/vscode",
+              "advanced/jetbrains"
+            ]
+          },
+          {
+            "group": "Multi-Agent & Automation",
+            "pages": [
+              "advanced/multi-agent",
+              "advanced/skills",
+              "advanced/tasks",
+              "advanced/remote-sessions"
+            ]
+          },
+          {
+            "group": "Extensibility",
+            "pages": [
+              "advanced/plugins",
+              "advanced/mcp-protocol",
+              "advanced/custom-tools"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Natural language coding assistance directly in the terminal",
+    "Full file system access — read, write, edit files with partial string replacement",
+    "Shell command execution via BashTool with permission controls",
+    "Git workflow automation — commits, PRs, code review",
+    "Multi-agent orchestration with AgentTool and TeamCreateTool",
+    "MCP (Model Context Protocol) server integration",
+    "IDE bridge for VS Code and JetBrains",
+    "Persistent memory and session management",
+    "Skill system for reusable agentic workflows",
+    "Plugin architecture for extending functionality",
+    "Voice input support",
+    "Vim mode"
+  ],
+  "publicApiSurface": [
+    "BashTool — Shell command execution",
+    "FileReadTool — Read files including images, PDFs, Jupyter notebooks",
+    "FileWriteTool — Create or overwrite files",
+    "FileEditTool — Partial file modification via string replacement",
+    "GlobTool — File pattern matching",
+    "GrepTool — ripgrep-based content search",
+    "WebFetchTool — Fetch URL content",
+    "WebSearchTool — Web search",
+    "AgentTool — Sub-agent spawning",
+    "SkillTool — Execute reusable skill workflows",
+    "MCPTool — MCP server tool invocation",
+    "TaskCreateTool / TaskUpdateTool — Task lifecycle management",
+    "TeamCreateTool / TeamDeleteTool — Team agent management",
+    "EnterPlanModeTool / ExitPlanModeTool — Plan mode toggle",
+    "/commit — Create a git commit",
+    "/review — Code review",
+    "/mcp — MCP server management",
+    "/config — Settings management",
+    "/doctor — Environment diagnostics",
+    "/memory — Persistent memory management",
+    "/skills — Skill management",
+    "/tasks — Task management",
+    "/resume — Restore previous session",
+    "/compact — Context compression"
+  ]
+}

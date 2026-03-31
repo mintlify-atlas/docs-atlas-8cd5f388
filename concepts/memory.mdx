@@ -1,0 +1,159 @@
+---
+title: "Memory & Context"
+description: "How Claude Code maintains memory across sessions and manages context."
+---
+
+Claude Code has two distinct memory layers: the **in-session context window** (everything Claude has seen in the current conversation) and **persistent memory files** (facts written to disk that survive across sessions). Understanding both helps you get consistent, context-aware assistance over time.
+
+## Two Types of Memory
+
+<CardGroup cols={2}>
+  <Card title="In-session context" icon="brain">
+    The full conversation history, tool results, and file reads live in the LLM's context window for the duration of a session. When the session ends, this is gone unless you use `/resume`.
+  </Card>
+  <Card title="Persistent memory" icon="database">
+    Key facts, preferences, and project context are written as Markdown files under `~/.claude/`. These are loaded automatically into every future session so Claude "remembers" you.
+  </Card>
+</CardGroup>
+
+## Persistent Memory: The `~/.claude/` Directory
+
+Persistent memory lives in a file-based system rooted at `~/.claude/` (or the path set by `CLAUDE_CODE_REMOTE_MEMORY_DIR` for remote sessions).
+
+The auto-memory directory for a project is resolved in this order:
+
+1. `CLAUDE_COWORK_MEMORY_PATH_OVERRIDE` env var (used by Cowork and SDK deployments).
+2. `autoMemoryDirectory` in `settings.json` (trusted sources: policy, local, or user settings — _not_ project settings, for security).
+3. `<memoryBase>/projects/<sanitized-git-root>/memory/` — the default, scoped to the canonical git root so all worktrees of a repo share one memory directory.
+
+### MEMORY.md — The Index File
+
+`MEMORY.md` is the entrypoint for the memory system. It acts as an _index_ — a concise list of pointers to individual topic files, not a place to write memory content directly.
+
+```
+~/.claude/projects/<project>/memory/
+├── MEMORY.md                   # index (auto-loaded into every session)
+├── user_role.md                # individual memory file
+├── feedback_testing.md
+├── project_context.md
+└── ...
+```
+
+`MEMORY.md` is loaded into the system prompt at startup. It is capped at **200 lines** and **25,000 bytes** — content beyond these limits is truncated with a warning so Claude always starts with a bounded context cost.
+
+Each entry in `MEMORY.md` follows this pattern:
+
+```markdown
+- [Title](file.md) — one-line description under ~150 characters
+```
+
+Individual memory files use a frontmatter format:
+
+```markdown
+---
+name: User role
+description: The user's role and team context
+type: user
+---
+
+Content of the memory goes here.
+```
+
+Memory types are constrained to a closed taxonomy: `user`, `feedback`, `project`, and `reference`. Content derivable from the codebase (architecture, patterns, git history) is explicitly excluded to prevent stale or redundant memories.
+
+## The /memory Command
+
+The `/memory` slash command opens a full-screen editor for viewing and editing your memory files directly.
+
+```
+/memory
+```
+
+From the memory UI you can:
+- Browse all memory files in the current project's memory directory.
+- Edit any file using your configured editor.
+- Add new memory entries.
+- Delete outdated or incorrect memories.
+
+<Note>
+  Claude will also update memory proactively during conversations. If you ask Claude to "remember" something it saves it immediately; if you ask it to "forget" something it finds and removes the relevant entry.
+</Note>
+
+## Auto Memory Extraction
+
+The `extractMemories` service (`src/services/extractMemories/`) runs as a background agent at the end of turns (when the `EXTRACT_MEMORIES` feature flag is active). It reviews the conversation and automatically extracts facts worth keeping — user preferences, corrections, project decisions — and writes them to the appropriate memory files.
+
+The background agent skips ranges where the main agent already wrote memories (`hasMemoryWritesSince` check), so there is no duplication.
+
+Auto memory can be disabled per-project or globally:
+
+```bash
+# Disable via environment variable
+CLAUDE_CODE_DISABLE_AUTO_MEMORY=1 claude
+
+# Or in ~/.claude/settings.json
+{
+  "autoMemoryEnabled": false
+}
+```
+
+## Project-Level Memory: CLAUDE.md
+
+In addition to the `~/.claude/` memory directory, Claude Code reads `CLAUDE.md` files from the project itself. These are checked into source control and shared with your whole team:
+
+```
+project/
+├── CLAUDE.md          # project-level instructions (committed to git)
+├── src/
+│   └── CLAUDE.md      # subdirectory-level instructions (optional)
+└── ...
+```
+
+`CLAUDE.md` files are loaded as nested memory attachments (`nestedMemoryAttachmentTriggers`) — injected into context when Claude navigates into or works within the corresponding directory. This makes project conventions, coding standards, and architectural decisions available automatically without occupying the main context window permanently.
+
+<Tip>
+  Use `CLAUDE.md` in your project root to document things like: preferred libraries, commit message style, test conventions, and deployment procedures. Claude will follow these instructions automatically.
+</Tip>
+
+## Context Compression: /compact
+
+When a long session fills the context window, use `/compact` to compress conversation history while preserving the essential facts.
+
+```
+/compact
+```
+
+The `compact` service (`src/services/compact/`) produces a compressed summary of the conversation history. The summary replaces the raw message history, freeing context space for continued work. A `pre_compact` hook fires before compression and a `post_compact` hook fires after, allowing custom processing.
+
+<Note>
+  Compact works on the current session only. Past session transcripts are preserved on disk for searching via the memory system's "Searching past context" feature.
+</Note>
+
+## Session Resume: /resume
+
+Claude Code records session transcripts to disk. Use `/resume` to restore a previous session and continue from where you left off.
+
+```
+/resume
+```
+
+The resume screen (`src/screens/Resume`) lists available past sessions. Selecting one replays the transcript into the UI and restores the conversation state, including any compact boundaries that were recorded.
+
+## Team Memory Sync
+
+When the `TEAMMEM` feature flag is active, a team memory directory is maintained alongside the personal auto-memory directory:
+
+```
+~/.claude/projects/<project>/memory/
+├── MEMORY.md               # personal memory index
+├── ...
+└── team/
+    ├── MEMORY.md           # shared team index
+    └── ...
+```
+
+The `teamMemorySync` service (`src/services/teamMemorySync/`) synchronizes the `team/` subdirectory across team members. Both the personal and team memory directories are loaded into context and presented to Claude as separate namespaced memory systems, so Claude can distinguish between individual preferences and shared team knowledge.
+
+<Warning>
+  Team memory requires auto memory to be enabled. Disabling `autoMemoryEnabled` also disables team memory sync.
+</Warning>

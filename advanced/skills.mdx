@@ -1,0 +1,78 @@
+---
+title: "Skills"
+description: "Create and use reusable agentic workflows with the skill system."
+---
+
+Skills are named, reusable agentic workflows that you can trigger by name. They're like macros for Claude — encapsulating multi-step processes so you can run them repeatedly without re-describing the steps.
+
+## What skills are
+
+A skill is a prompt or workflow definition that Claude executes via `SkillTool`. Skills can:
+- Encode your team's specific conventions
+- Automate repetitive multi-step tasks
+- Wrap complex instructions into a single invocation
+
+## Running a skill
+
+```
+> /skills
+```
+
+This lists available skills. Run a skill by name:
+
+```
+> Run the code-review skill
+> Execute the deploy-to-staging skill
+> Use the add-tests skill on src/api/users.ts
+```
+
+Or directly invoke a skill in conversation:
+
+```
+> Run the "generate-changelog" skill for the commits since last tag
+```
+
+## Managing skills
+
+The `/skills` command provides a management UI:
+
+```
+> /skills
+```
+
+Options:
+- List all available skills (built-in and custom)
+- Add a new skill
+- Edit an existing skill
+- Delete a skill
+
+## Bundled skills
+
+Claude Code ships with built-in skills for common workflows. These are stored in `src/skills/bundled/` and cover tasks like code review, documentation generation, and testing patterns.
+
+## Creating a custom skill
+
+Skills are stored in `~/.claude/skills/`. Create a new `.md` file describing the workflow:
+
+```markdown
+---
+name: add-error-handling
+description: Add consistent error handling to a TypeScript function
+---
+
+Read the target function. Identify all places where errors could occur (async calls, type assertions, external data). Add try/catch blocks with specific error types. Use the project's existing error handling patterns from src/utils/errors.ts.
+```
+
+Save this as `~/.claude/skills/add-error-handling.md`. It's immediately available:
+
+```
+> Run the add-error-handling skill on src/api/payments.ts
+```
+
+## MCP-based skills
+
+Skills can also be loaded from MCP servers via `mcpSkillBuilders.ts`. This lets teams share skills through a central MCP server.
+
+<Tip>
+  Good candidates for skills: anything you ask Claude to do more than twice. Consistent code review checklists, project-specific refactoring patterns, and deployment workflows are all good fits.
+</Tip>

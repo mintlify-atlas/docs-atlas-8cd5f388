@@ -1,0 +1,79 @@
+---
+title: "JetBrains Integration"
+description: "Use Claude Code with JetBrains IDEs including IntelliJ IDEA, WebStorm, PyCharm, and GoLand."
+---
+
+The Claude Code JetBrains plugin connects Claude Code to any JetBrains IDE, providing the same bridge-based context sharing as the VS Code extension.
+
+## Supported IDEs
+
+- IntelliJ IDEA (Java, Kotlin)
+- WebStorm (JavaScript, TypeScript)
+- PyCharm (Python)
+- GoLand (Go)
+- Rider (.NET)
+- CLion (C/C++)
+- DataGrip (databases)
+- Any other JetBrains IDE
+
+## Installation
+
+<Steps>
+  <Step title="Install Claude Code CLI">
+    ```bash
+    npm install -g @anthropic-ai/claude-code
+    claude /login
+    ```
+  </Step>
+  <Step title="Install the JetBrains plugin">
+    In your JetBrains IDE: **Settings → Plugins → Marketplace**, search for "Claude Code", and install.
+  </Step>
+  <Step title="Restart the IDE">
+    Restart to activate the plugin.
+  </Step>
+  <Step title="Start Claude Code">
+    Open a terminal in your IDE and run `claude`. The plugin establishes the bridge connection automatically.
+  </Step>
+</Steps>
+
+## Features
+
+The JetBrains integration provides the same capabilities as VS Code:
+
+<CardGroup cols={2}>
+  <Card title="Open file awareness" icon="file-code">
+    Claude sees your current file without you pasting it
+  </Card>
+  <Card title="Selection context" icon="text-slash">
+    Highlight code for Claude to work on specifically
+  </Card>
+  <Card title="Navigation" icon="arrow-pointer">
+    Claude opens files and jumps to lines in the editor
+  </Card>
+  <Card title="Diff review" icon="code-compare">
+    Changes shown as standard JetBrains diffs
+  </Card>
+</CardGroup>
+
+## Usage
+
+With the plugin connected, Claude responds to questions about your open file automatically:
+
+```
+> Why is this method throwing a NullPointerException?
+> Refactor this to use the Builder pattern
+> Generate a unit test for the selected method
+```
+
+<Note>
+  The bridge uses a local socket connection — all communication stays on your machine. The plugin does not send your code to any server independently of Claude Code.
+</Note>
+
+## LSP integration
+
+Claude Code also integrates with your IDE's Language Server Protocol (LSP) client via `LSPTool`. This allows Claude to query type information, go-to-definition results, and diagnostics from your language server — giving it the same semantic understanding your IDE has.
+
+```
+> What type does this function return according to the type checker?
+> Show me all references to this interface
+```

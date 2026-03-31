@@ -1,0 +1,177 @@
+---
+title: "Tool System"
+description: "How Claude Code's tool system works — tool invocation, schemas, and permissions."
+---
+
+Every action Claude Code can take — reading a file, running a shell command, searching the web, spawning a sub-agent — is implemented as a **tool**: a self-contained module that declares its input schema, permission model, and execution logic. The LLM decides which tools to call; the tool system validates inputs, checks permissions, executes, and returns results.
+
+## The Tool Interface
+
+Tools are defined by the `Tool<Input, Output, P>` generic type in `src/Tool.ts`. The three type parameters are:
+
+| Parameter | Type | Purpose |
+|---|---|---|
+| `Input` | `z.ZodType` (object) | Validated input schema |
+| `Output` | `unknown` | Return value from `call()` |
+| `P` | `ToolProgressData` | Progress event payload shape |
+
+Core members of the `Tool` interface:
+
+```typescript
+// src/Tool.ts
+export type Tool<Input, Output, P> = {
+  readonly name: string
+  readonly inputSchema: Input          // Zod v4 schema — validated before call()
+  readonly inputJSONSchema?: ToolInputJSONSchema  // MCP tools may use raw JSON Schema
+
+  call(
+    args: z.infer<Input>,
+    context: ToolUseContext,
+    canUseTool: CanUseToolFn,
+    parentMessage: AssistantMessage,
+    onProgress?: ToolCallProgress<P>,
+  ): Promise<ToolResult<Output>>
+
+  checkPermissions(
+    input: z.infer<Input>,
+    context: ToolUseContext,
+  ): Promise<PermissionResult>
+
+  validateInput?(
+    input: z.infer<Input>,
+    context: ToolUseContext,
+  ): Promise<ValidationResult>
+
+  isEnabled(): boolean
+  isReadOnly(input: z.infer<Input>): boolean
+  isDestructive?(input: z.infer<Input>): boolean
+  isConcurrencySafe(input: z.infer<Input>): boolean
+  // ... rendering methods for terminal UI
+}
+```
+
+<Note>
+  Input schemas use [Zod v4](https://zod.dev). The schema is converted to JSON Schema for the Anthropic API and validated locally before `call()` is ever invoked.
+</Note>
+
+## Available Tools
+
+All tools are registered in `src/tools.ts` and passed to `QueryEngine`. Some tools are conditionally included based on feature flags or environment variables.
+
+<AccordionGroup>
+  <Accordion title="File & Shell tools">
+
+| Tool | Description |
+|---|---|
+| `BashTool` | Shell command execution via the system shell |
+| `FileReadTool` | Read files — text, images, PDFs, and notebooks |
+| `FileWriteTool` | Create or fully overwrite a file |
+| `FileEditTool` | Partial file modification using string replacement |
+| `GlobTool` | File pattern matching search |
+| `GrepTool` | ripgrep-based content search across files |
+| `NotebookEditTool` | Edit Jupyter notebook cells |
+
+  </Accordion>
+  <Accordion title="Web & search tools">
+
+| Tool | Description |
+|---|---|
+| `WebFetchTool` | Fetch and parse URL content |
+| `WebSearchTool` | Web search |
+| `LSPTool` | Language Server Protocol integration (go-to-definition, hover, diagnostics) |
+| `ToolSearchTool` | Deferred tool discovery — find tools by keyword before invoking them |
+
+  </Accordion>
+  <Accordion title="Agent & collaboration tools">
+
+| Tool | Description |
+|---|---|
+| `AgentTool` | Spawn a sub-agent with its own context and tool access |
+| `SkillTool` | Execute a reusable skill workflow |
+| `MCPTool` | Invoke a tool exposed by an MCP server |
+| `SendMessageTool` | Send a message to another agent (inter-agent communication) |
+| `TeamCreateTool` / `TeamDeleteTool` | Create or destroy a team of parallel agents |
+| `AskUserQuestionTool` | Prompt the user for input mid-task |
+
+  </Accordion>
+  <Accordion title="Task & planning tools">
+
+| Tool | Description |
+|---|---|
+| `TaskCreateTool` / `TaskUpdateTool` | Create and update tasks |
+| `TaskGetTool` / `TaskListTool` | Retrieve task details and list tasks |
+| `TaskStopTool` | Stop a running background task |
+| `EnterPlanModeTool` / `ExitPlanModeTool` | Toggle plan mode (plan without executing) |
+| `EnterWorktreeTool` / `ExitWorktreeTool` | Isolate work in a git worktree |
+| `TodoWriteTool` | Write structured to-do lists |
+
+  </Accordion>
+  <Accordion title="Advanced & feature-gated tools">
+
+| Tool | Description | Gate |
+|---|---|---|
+| `SleepTool` | Wait for a duration (proactive / background mode) | `PROACTIVE` or `KAIROS` |
+| `CronCreateTool` / `CronDeleteTool` / `CronListTool` | Scheduled trigger management | `AGENT_TRIGGERS` |
+| `RemoteTriggerTool` | Remote event trigger | `AGENT_TRIGGERS_REMOTE` |
+| `MonitorTool` | Monitoring and alerting | `MONITOR_TOOL` |
+| `SyntheticOutputTool` | Emit structured output for SDK consumers | always available |
+| `SuggestBackgroundPRTool` | Suggest opening a background PR | `ant` user type |
+| `REPLTool` | Persistent REPL environment | `ant` user type |
+| `ConfigTool` | Read / write Claude Code configuration | always available |
+| `BriefTool` | Generate a brief summary of the session | always available |
+| `TungstenTool` | Internal Anthropic tooling | always available |
+| `ListMcpResourcesTool` / `ReadMcpResourceTool` | Browse and read MCP server resources | always available |
+
+  </Accordion>
+</AccordionGroup>
+
+## Tool Registration
+
+`src/tools.ts` assembles the complete tool list and exports it. Feature-gated tools are loaded via conditional `require()` so that Bun's build system can eliminate them from the bundle entirely when the corresponding flag is inactive:
+
+```typescript
+// src/tools.ts
+const SleepTool =
+  feature('PROACTIVE') || feature('KAIROS')
+    ? require('./tools/SleepTool/SleepTool.js').SleepTool
+    : null
+
+// Circular-dependency-safe lazy requires
+const getTeamCreateTool = () =>
+  require('./tools/TeamCreateTool/TeamCreateTool.js').TeamCreateTool
+```
+
+The assembled `Tools` array is passed directly into `QueryEngine` at construction time and forwarded into every `ToolUseContext`.
+
+## How a Tool Call Flows
+
+<Steps>
+  <Step title="LLM emits a tool_use block">
+    The streamed API response includes one or more `tool_use` content blocks, each with a `name` and a JSON `input` object.
+  </Step>
+  <Step title="Input validation">
+    The tool's Zod `inputSchema` parses the raw JSON input. If parsing fails, an error result is returned to the model immediately — `call()` is never invoked.
+  </Step>
+  <Step title="validateInput() (optional)">
+    If the tool defines `validateInput()`, it runs next. This handles semantic validation that Zod can't express (e.g., "this file path must be within the project root").
+  </Step>
+  <Step title="checkPermissions()">
+    Every tool invocation goes through `checkPermissions()`. The result flows into the `toolPermission` hook, which either auto-resolves based on the current permission mode or shows an interactive prompt. See [Permissions & Safety](/concepts/permissions).
+  </Step>
+  <Step title="call() executes">
+    With permission granted, `call()` runs with the validated input and a `ToolUseContext` that provides access to app state, the abort controller, file cache, and more.
+  </Step>
+  <Step title="Result returned to LLM">
+    The tool's `Output` is serialized via `mapToolResultToToolResultBlockParam()` and appended as a `tool_result` message. The model is then re-queried.
+  </Step>
+</Steps>
+
+## Tool Concurrency
+
+Tools that declare `isConcurrencySafe()` returning `true` may be executed in parallel when the LLM emits multiple `tool_use` blocks in a single response. Read-only tools (e.g., `GlobTool`, `GrepTool`, `FileReadTool`) are typically concurrency-safe; mutating tools (e.g., `FileWriteTool`, `BashTool`) are not.
+
+## Deferred Tools
+
+Tools with `shouldDefer: true` are sent to the model with `defer_loading: true` — their full schema is omitted from the initial system prompt. The model must call `ToolSearchTool` first to discover and load a deferred tool's schema before it can be invoked. This keeps the initial context window smaller for projects with many MCP tools.
+
+Tools with `alwaysLoad: true` are never deferred and always appear in the initial prompt, even when `ToolSearchTool` is active.

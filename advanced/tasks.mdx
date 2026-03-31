@@ -1,0 +1,63 @@
+---
+title: "Tasks"
+description: "Create, manage, and track background tasks in Claude Code."
+---
+
+Claude Code includes a task system for managing longer-running work that may span multiple steps or need to run in the background.
+
+## Task tools
+
+| Tool | Description |
+|------|-------------|
+| `TaskCreateTool` | Create a new named task |
+| `TaskUpdateTool` | Update task status or output |
+| `TaskGetTool` | Retrieve a specific task's details |
+| `TaskListTool` | List all tasks and their statuses |
+| `TaskOutputTool` | Get the output from a completed task |
+| `TaskStopTool` | Stop a running task |
+
+## Creating tasks
+
+Claude uses the task system automatically for long-running work. You can also ask explicitly:
+
+```
+> Create a background task to analyze all the TypeScript errors across the codebase
+> Start a task that monitors the test suite and reports failures
+```
+
+## Viewing tasks
+
+```
+> /tasks
+```
+
+The `/tasks` command opens the task management UI showing all active, pending, and completed tasks with their current status and output.
+
+## Scheduled tasks
+
+The `ScheduleCronTool` (also shown as `CronCreateTool` in some contexts) lets Claude create scheduled triggers:
+
+```
+> Set up a daily task that runs the test suite at 9am and reports results
+```
+
+Scheduled tasks use cron-style scheduling and run via the background task runner.
+
+## Background task monitoring
+
+Use `/tasks` to monitor task progress:
+
+- **pending** — Task is queued but not yet started
+- **running** — Task is actively executing
+- **completed** — Task finished successfully
+- **failed** — Task encountered an error
+
+```
+> /tasks
+> Show me the output from the last completed task
+> Stop the running analysis task
+```
+
+<Note>
+  Tasks persist across REPL sessions. Use `/resume` to reconnect to a previous session and check on tasks that were running when you closed Claude Code.
+</Note>

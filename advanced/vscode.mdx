@@ -1,0 +1,78 @@
+---
+title: "VS Code Integration"
+description: "Use Claude Code with the VS Code extension for in-editor AI assistance."
+---
+
+The Claude Code VS Code extension connects your editor to Claude Code running in the terminal, enabling context-aware assistance based on your open files and selections.
+
+## Installation
+
+<Steps>
+  <Step title="Install Claude Code">
+    Make sure Claude Code CLI is installed and authenticated:
+    ```bash
+    npm install -g @anthropic-ai/claude-code
+    claude /login
+    ```
+  </Step>
+  <Step title="Install the VS Code extension">
+    Search for "Claude Code" in the VS Code Extensions panel (`Ctrl+Shift+X`) and install it.
+  </Step>
+  <Step title="Open a project">
+    Open your project folder in VS Code. The extension connects automatically when you start Claude Code in that directory.
+  </Step>
+  <Step title="Start Claude Code">
+    Open a terminal in VS Code (`Ctrl+`\``) and run:
+    ```bash
+    claude
+    ```
+    The extension detects the running instance and establishes the bridge connection.
+  </Step>
+</Steps>
+
+## Features
+
+### Current file context
+
+Claude automatically knows what file you have open:
+
+```
+> Explain what this file does
+> Add error handling to this module
+> Write tests for the functions in this file
+```
+
+### Selection-based editing
+
+Highlight code in VS Code, then ask Claude to work on it:
+
+```
+> Refactor this selection to be more readable
+> What does this selected code do?
+> Convert this to TypeScript
+```
+
+### Navigate to code
+
+Claude can open files and jump to specific lines in VS Code:
+
+```
+> Show me where parseToken is defined
+> Open the auth middleware
+```
+
+### Diff view
+
+Proposed file changes appear as diffs in VS Code's standard diff viewer, letting you review and accept/reject changes line by line.
+
+## The /desktop command
+
+The `/desktop` command hands off a terminal session to the Claude desktop app, which integrates with VS Code at a deeper level:
+
+```
+> /desktop
+```
+
+<Tip>
+  Keep the Claude Code terminal visible alongside your editor. The split-view workflow — editor on left, Claude on right — is the most efficient setup.
+</Tip>

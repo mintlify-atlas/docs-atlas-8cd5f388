@@ -1,0 +1,83 @@
+---
+title: "Agent & Collaboration Tools"
+description: "Tools for spawning sub-agents, managing teams, and coordinating parallel work."
+---
+
+Agent tools enable Claude Code to coordinate multiple AI agents working in parallel — delegating subtasks, managing results, and synthesizing complex multi-step work.
+
+## AgentTool
+
+Spawns a sub-agent to handle a specific subtask. The sub-agent runs independently with its own context, executes tools, and returns results to the parent agent.
+
+**Usage pattern:**
+```
+> Refactor all the API handlers — delegate each module to a separate agent
+> Run a security audit on the codebase in parallel with the performance analysis
+```
+
+**When Claude uses it:**
+- Parallelizing independent tasks (e.g., updating multiple files simultaneously)
+- Delegating focused subtasks (e.g., "write tests for this function")
+- Running long-running operations without blocking the main conversation
+
+**How it works:**
+1. Parent agent calls AgentTool with a task description and optional tools list
+2. Sub-agent receives a fresh context with the specified tools
+3. Sub-agent executes the task and returns structured results
+4. Parent agent integrates results and continues
+
+## TeamCreateTool / TeamDeleteTool
+
+Creates and manages teams of agents for coordinated parallel work. A team is a named group of agents that can collaborate on related tasks.
+
+```
+> Create a team to refactor the entire authentication module
+```
+
+**TeamCreateTool** provisions a team with a defined set of agents and a coordination strategy.  
+**TeamDeleteTool** tears down a team when work is complete.
+
+## SendMessageTool
+
+Sends a message to another agent in the current team. Used for inter-agent coordination and passing results between parallel workers.
+
+This is used internally during multi-agent workflows — you don't invoke it directly.
+
+## EnterPlanModeTool / ExitPlanModeTool
+
+Enters and exits plan mode. In plan mode, Claude describes all the actions it plans to take (file edits, shell commands, etc.) but does not execute anything until you approve the plan.
+
+**Usage pattern:**
+```
+> Enter plan mode and describe how you'd add OAuth to this app
+```
+
+Plan mode is also activated by the `/plan` command.
+
+**Workflow:**
+1. Claude generates a detailed action plan
+2. You review, modify, or approve the plan
+3. Claude executes only after your approval
+
+## EnterWorktreeTool / ExitWorktreeTool
+
+Creates and manages git worktrees for isolated task execution. Useful for large refactors where you want changes isolated from the main working tree.
+
+```
+> Use a worktree to refactor the database layer without affecting my current branch
+```
+
+## SkillTool
+
+Executes a named skill — a reusable agentic workflow defined in the skills system. Skills encapsulate multi-step processes that can be triggered by name.
+
+```
+> Run the code-review skill on this PR
+> Execute the deploy-to-staging skill
+```
+
+See [Skills](/advanced/skills) for how to create and manage skills.
+
+<Note>
+  Multi-agent workflows are most effective for tasks with clearly separable subtasks — like updating multiple independent modules, running parallel analyses, or generating code for different layers of the stack simultaneously.
+</Note>

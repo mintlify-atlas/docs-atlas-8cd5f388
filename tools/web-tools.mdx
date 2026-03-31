@@ -1,0 +1,56 @@
+---
+title: "Web Tools"
+description: "Tools for fetching URLs and searching the web."
+---
+
+Web tools give Claude the ability to retrieve information from the internet — fetching documentation, searching for solutions, and reading external resources.
+
+## WebFetchTool
+
+Fetches the content of a URL and returns it as text or markdown. Useful for reading documentation, API specs, or any web page.
+
+**Usage pattern:**
+```
+> Fetch the React hooks documentation and explain useCallback
+> Get the latest changelog from the express npm page
+> Read this Stack Overflow answer: https://...
+```
+
+**Supported content:**
+- Web pages (returned as markdown)
+- Plain text files
+- HTML pages (converted to readable text)
+- JSON APIs
+
+<Note>
+  WebFetchTool requires network permission. On first use, Claude will ask for your approval to make web requests.
+</Note>
+
+## WebSearchTool
+
+Performs a web search and returns results with titles, URLs, and snippets.
+
+**Usage pattern:**
+```
+> Search for how to configure Jest with TypeScript
+> Find the documentation for the Zod v4 API
+> Look up the error "ECONNREFUSED 127.0.0.1:5432"
+```
+
+**When Claude uses it:**
+- Looking up unfamiliar libraries or APIs
+- Finding solutions to error messages
+- Checking current best practices
+- Locating documentation for dependencies
+
+**Combining with WebFetchTool:**
+
+Claude often uses WebSearchTool to find relevant URLs, then WebFetchTool to read the full content:
+
+1. Search for "Prisma soft delete pattern"
+2. Identify the most relevant result
+3. Fetch the full page for detailed guidance
+
+<Tip>
+  You can tell Claude to search the web explicitly: "Search the web for the best way to handle JWT refresh tokens in Express." Claude will use WebSearchTool automatically when it needs up-to-date information.
+</Tip>

@@ -1,0 +1,69 @@
+---
+title: "Plugins"
+description: "Extend Claude Code with built-in and third-party plugins."
+---
+
+Claude Code's plugin system allows extending its capabilities with additional commands, tools, and integrations — both through built-in plugins and third-party ones.
+
+## What plugins provide
+
+Plugins can add:
+- New slash commands
+- Additional tools for Claude to invoke
+- UI components and panels
+- Integrations with external services
+
+## Managing plugins
+
+```
+> /plugin
+```
+
+The `/plugin` command opens the plugin management UI:
+
+```
+> /plugin list       — list installed plugins
+> /plugin install    — install a new plugin
+> /plugin remove     — remove a plugin
+> /reload-plugins    — reload all plugins without restarting
+```
+
+## Built-in plugins
+
+Claude Code ships with bundled plugins in `src/plugins/bundled/`. These are loaded via `builtinPlugins.ts` and provide core functionality like:
+- Official MCP server integrations
+- Platform-specific features (macOS, Windows, Linux)
+- Feature-flagged experimental capabilities
+
+## Installing plugins
+
+Plugins are loaded from `~/.claude/plugins/`. To install a third-party plugin:
+
+```
+> /plugin install <plugin-name-or-path>
+```
+
+Plugins can be:
+- npm packages (`@scope/claude-code-plugin-name`)
+- Local directories with a plugin manifest
+- URLs pointing to plugin packages
+
+## Reloading plugins
+
+After adding or modifying a plugin, reload without restarting:
+
+```
+> /reload-plugins
+```
+
+## Plugin loader
+
+The plugin loader (`src/services/plugins/`) handles:
+- Discovering plugins from `~/.claude/plugins/`
+- Loading plugin manifests
+- Registering plugin-provided tools and commands
+- Sandboxing plugin execution
+
+<Note>
+  Plugins run with the same permissions as Claude Code itself. Only install plugins from sources you trust.
+</Note>

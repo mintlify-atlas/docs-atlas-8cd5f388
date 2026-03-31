@@ -1,0 +1,82 @@
+---
+title: "Multi-Agent Workflows"
+description: "Coordinate parallel agents to tackle complex tasks faster."
+---
+
+Claude Code supports multi-agent orchestration — spinning up multiple AI agents working in parallel to complete complex tasks faster than a single agent could alone.
+
+## How it works
+
+When you ask Claude to handle a large or parallelizable task, it can:
+
+1. Break the task into independent subtasks
+2. Spawn sub-agents via `AgentTool` for each subtask
+3. Each sub-agent runs independently with its own tools and context
+4. Results are collected and synthesized by the parent agent
+
+## Spawning sub-agents
+
+You don't need to do anything special — just ask:
+
+```
+> Refactor all the API handler files to use async/await consistently
+> Write unit tests for every function in src/utils/
+> Review each module in src/services/ for security issues
+```
+
+Claude decides when parallelization helps and spawns agents accordingly.
+
+## Team-based workflows
+
+For larger coordinated work, Claude can create a named team of agents:
+
+```
+> Create a team to migrate the entire codebase from JavaScript to TypeScript
+```
+
+**TeamCreateTool** provisions the team. Each agent in the team can communicate via **SendMessageTool**, enabling coordination patterns like:
+- One agent reads files, others write changes
+- A coordinator agent breaks down work and delegates
+- A reviewer agent validates results from worker agents
+
+Teams are cleaned up automatically or with **TeamDeleteTool**.
+
+## Coordinator mode
+
+The `coordinator/coordinatorMode.ts` subsystem handles multi-agent orchestration at a higher level — managing agent lifecycles, work distribution, and result aggregation for complex swarm tasks.
+
+## Plan before execution
+
+For large multi-agent tasks, enter plan mode first:
+
+```
+> Enter plan mode: describe how you'd parallelise migrating all our API tests to the new test framework
+```
+
+Review the plan, then approve execution:
+
+```
+> Looks good, execute the plan
+```
+
+## Example: parallel test generation
+
+```
+> Generate unit tests for every file in src/services/ — use multiple agents to do this in parallel
+```
+
+Claude will:
+1. List all files in `src/services/` using GlobTool
+2. Spawn one sub-agent per file (or group small files)
+3. Each agent reads its assigned file and writes a test file
+4. Parent agent reports completion
+
+## Limitations
+
+- Sub-agents share your permission settings but each gets a fresh context window
+- Very large swarms may hit API rate limits — Claude handles backoff automatically
+- Sub-agent work is visible in the parent session's output
+
+<Tip>
+  Multi-agent workflows shine for tasks with many independent files (e.g., adding types to every module, generating tests, or updating imports across a large codebase).
+</Tip>

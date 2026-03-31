@@ -1,0 +1,94 @@
+---
+title: "Installation"
+description: "Install Claude Code on your system."
+---
+
+## System requirements
+
+- **Operating system**: macOS, Linux, or Windows
+- **Runtime**: Node.js with npm, or [Bun](https://bun.sh)
+- **Architecture**: x64 or ARM64
+
+## Installation methods
+
+<CodeGroup>
+
+```bash npm
+npm install -g @anthropic-ai/claude-code
+```
+
+```bash bun
+bun install -g @anthropic-ai/claude-code
+```
+
+</CodeGroup>
+
+## Verify the installation
+
+Confirm Claude Code installed correctly by checking the version:
+
+```bash
+claude --version
+```
+
+## Authentication setup
+
+Run Claude Code for the first time and authenticate with your Anthropic account:
+
+```bash
+claude
+```
+
+Then inside the REPL, run:
+
+```
+/login
+```
+
+The `/login` command launches an OAuth 2.0 flow in your browser. Sign in with your Anthropic account to complete authentication. On macOS, credentials are stored securely in the system Keychain.
+
+<Tip>
+  If you already have an `ANTHROPIC_API_KEY` environment variable set, Claude Code will use it automatically and the `/login` description changes to "Switch Anthropic accounts".
+</Tip>
+
+## Environment check
+
+After authenticating, run `/doctor` inside the REPL to verify your environment:
+
+```
+/doctor
+```
+
+`/doctor` diagnoses your Claude Code installation and settings, reporting on authentication status, configuration validity, and connectivity.
+
+## Updating
+
+To update Claude Code to the latest version, use the `/upgrade` command inside the REPL:
+
+```
+/upgrade
+```
+
+Alternatively, re-run the original install command:
+
+<CodeGroup>
+
+```bash npm
+npm install -g @anthropic-ai/claude-code
+```
+
+```bash bun
+bun install -g @anthropic-ai/claude-code
+```
+
+</CodeGroup>
+
+## Uninstallation
+
+```bash
+npm uninstall -g @anthropic-ai/claude-code
+```
+
+<Note>
+  On macOS, Claude Code stores credentials in the system Keychain. Uninstalling the package does not remove those entries. You can remove them manually via **Keychain Access** if needed.
+</Note>

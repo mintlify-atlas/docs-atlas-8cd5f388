@@ -1,0 +1,111 @@
+---
+title: "Configuration Commands"
+description: "Manage Claude Code settings from the REPL."
+---
+
+Several slash commands let you view and change Claude Code's behavior without leaving the terminal.
+
+## /config
+
+Open the interactive settings panel (also aliased as `/settings`):
+
+```
+> /config
+```
+
+This opens a full-screen interactive UI where you can navigate and change all Claude Code settings — model, permission mode, theme, vim mode, and more. Navigate with arrow keys; changes take effect immediately.
+
+## /model
+
+Switch between available Claude models mid-session:
+
+```
+> /model
+```
+
+Claude Code supports all models available on your Anthropic account.
+
+## /theme
+
+Change the terminal color theme:
+
+```
+> /theme
+```
+
+Pick from available themes to adjust syntax highlighting and UI colors.
+
+## /vim
+
+Toggle vim keybinding mode for the input prompt:
+
+```
+> /vim
+```
+
+In vim mode, use normal vim motions (`h j k l`, `w b`, `0 $`, etc.) to navigate and edit your input.
+
+## /effort
+
+Adjust Claude's reasoning effort level:
+
+```
+> /effort
+```
+
+Higher effort enables extended thinking for complex problems. Lower effort gives faster responses for simple tasks.
+
+## /output-style
+
+Change how Claude formats its responses:
+
+```
+> /output-style
+```
+
+Options include different verbosity levels and formatting preferences.
+
+## /cost
+
+View token usage and estimated cost for the current session:
+
+```
+> /cost
+```
+
+This shows input tokens, output tokens, and running cost based on the active model's pricing.
+
+## /doctor
+
+Diagnose your environment:
+
+```
+> /doctor
+```
+
+The doctor command checks:
+
+- Anthropic API authentication status
+- Network connectivity to Anthropic endpoints
+- Git installation and configuration
+- Node.js / Bun runtime version
+- Claude Code version and available updates
+- MCP server connectivity (if configured)
+
+<Tip>
+  Run `/doctor` first whenever something isn't working as expected — it catches most common configuration issues.
+</Tip>
+
+## /upgrade
+
+Upgrade Claude Code to the latest version:
+
+```
+> /upgrade
+```
+
+This downloads and installs the latest release. You can also upgrade manually:
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```

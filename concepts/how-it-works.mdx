@@ -1,0 +1,134 @@
+---
+title: "How Claude Code Works"
+description: "Understand the architecture and execution model behind Claude Code."
+---
+
+Claude Code is a REPL-based agentic loop. You type a message, the LLM responds, Claude invokes tools, results flow back to the LLM, and the cycle continues until the task is complete or you interrupt it. The entire session is orchestrated by a single core class — `QueryEngine` — backed by a React/Ink terminal UI and a rich tool registry.
+
+## The QueryEngine
+
+`QueryEngine` (`src/QueryEngine.ts`, ~46K lines) is the engine that drives every conversation. One instance is created per conversation; each `submitMessage()` call starts a new turn within the same session while preserving state — messages, file cache, token usage — across turns.
+
+Key responsibilities:
+
+| Concern | Detail |
+|---|---|
+| **Streaming responses** | Streams chunks from the Anthropic API as they arrive, updating the UI progressively |
+| **Tool-call loop** | After each streamed response, executes all requested tool calls, then re-queries the model with the results |
+| **Thinking mode** | Configurable `ThinkingConfig` enables extended thinking (budget tokens) for complex tasks |
+| **Retry logic** | Retryable API errors (rate limits, transient failures) are caught via `categorizeRetryableAPIError` and retried automatically |
+| **Token counting** | Tracks cumulative usage via `accumulateUsage` / `updateUsage`; exposes cost via `getTotalCost()` and `getModelUsage()` |
+
+## The Tool-Call Loop
+
+Every turn follows this sequence:
+
+<Steps>
+  <Step title="User message submitted">
+    `submitMessage()` is called with the user's input. The message is normalized and appended to `mutableMessages`.
+  </Step>
+  <Step title="System prompt assembled">
+    `fetchSystemPromptParts()` and `getUserContext()` build the full system prompt, including memory content, working directory, and any custom prompts.
+  </Step>
+  <Step title="API query">
+    The `query()` function streams a response from the Anthropic API. Streaming chunks are yielded to the UI in real time.
+  </Step>
+  <Step title="Tool calls executed">
+    If the response contains `tool_use` blocks, each tool is run through the permission check, executed, and its result appended as a `tool_result` message.
+  </Step>
+  <Step title="Loop or return">
+    If tools were called, the model is queried again with the results. This repeats until the model emits a final text response with no tool calls (or `maxTurns` is reached).
+  </Step>
+</Steps>
+
+```
+User input
+    │
+    ▼
+QueryEngine.submitMessage()
+    │
+    ▼
+fetchSystemPromptParts() + getUserContext()
+    │
+    ▼
+query() ──► Anthropic API (streaming)
+    │
+    ├── Text block ──► render to terminal
+    │
+    └── tool_use blocks
+            │
+            ▼
+        checkPermissions()
+            │
+            ▼
+        tool.call()
+            │
+            ▼
+        tool_result messages
+            │
+            ▼
+        re-query ──► (loop back to API)
+```
+
+## Parallel Startup Optimization
+
+Startup time is minimized by firing side-effects _before_ heavy module evaluation begins in `main.tsx`:
+
+```typescript
+// main.tsx — fired before other imports resolve
+startMdmRawRead()       // prefetch MDM / managed-device settings
+startKeychainPrefetch() // warm macOS Keychain reads
+```
+
+These run concurrently with the Commander.js CLI parse and React/Ink renderer initialization, so by the time the REPL is ready the slowest I/O (keychain, MDM) has usually already completed.
+
+## Lazy Loading
+
+Two large native modules are deferred via dynamic `import()` until they are actually needed:
+
+| Module | Approximate size | When loaded |
+|---|---|---|
+| OpenTelemetry | ~400 KB | First telemetry event |
+| gRPC | ~700 KB | First gRPC connection (e.g., coordinator mode) |
+
+This keeps the cold-start time low even on slower machines.
+
+## Feature Flags
+
+Claude Code uses Bun's `bun:bundle` feature-flag mechanism for dead-code elimination. Inactive flags are completely stripped at build time — the code doesn't just branch, it's removed from the bundle entirely.
+
+```typescript
+import { feature } from 'bun:bundle'
+
+// Inactive code is completely stripped at build time
+const voiceCommand = feature('VOICE_MODE')
+  ? require('./commands/voice/index.js').default
+  : null
+```
+
+Notable flags found in the source:
+
+| Flag | Description |
+|---|---|
+| `PROACTIVE` | Enables proactive / background-agent mode |
+| `KAIROS` | Long-lived assistant mode with append-only daily memory logs |
+| `BRIDGE_MODE` | IDE bridge (VS Code, JetBrains) communication layer |
+| `DAEMON` | Persistent daemon process for faster subsequent launches |
+| `VOICE_MODE` | Voice input support |
+| `AGENT_TRIGGERS` | Scheduled cron triggers and remote triggers for agents |
+| `MONITOR_TOOL` | Monitoring tool |
+| `EXTRACT_MEMORIES` | Background memory-extraction agent |
+| `COORDINATOR_MODE` | Multi-agent coordinator |
+| `BASH_CLASSIFIER` | Auto-classifier for Bash permission decisions |
+| `TEAMMEM` | Team-shared memory sync |
+
+## Context Collection
+
+Before every API call the system prompt is assembled from two sources:
+
+- **`getSystemContext()`** — static environment facts: OS, shell, working directory, date/time, Claude Code version, available tools list, and project-level `CLAUDE.md` contents.
+- **`getUserContext()`** — dynamic per-turn context: memory prompt (from `loadMemoryPrompt()`), coordinator context, and any appended system prompt provided via config.
+
+<Note>
+  The memory prompt is injected into the _user_ context rather than the system prompt to keep the system prompt cache prefix stable across turns, which reduces API costs.
+</Note>

@@ -1,0 +1,143 @@
+---
+title: "Permissions & Safety"
+description: "How Claude Code checks tool permissions and keeps you in control."
+---
+
+Every tool invocation in Claude Code goes through a permission check before execution. The permission system is designed to give you full control over what Claude does, while offering flexible automation modes for trusted workflows.
+
+## Permission Modes
+
+The active permission mode is stored in `ToolPermissionContext.mode` and determines how permission prompts are resolved.
+
+<CardGroup cols={2}>
+  <Card title="default" icon="shield">
+    The standard interactive mode. Claude prompts you before running potentially impactful operations — bash commands, file writes, web requests. Read-only operations (file reads, searches) are generally auto-approved.
+  </Card>
+  <Card title="plan" icon="list-check">
+    Claude can analyze, plan, and reason — but cannot execute any tool that requires permission. Use this when you want to review a plan before committing to it.
+  </Card>
+  <Card title="bypassPermissions" icon="bolt">
+    All permission prompts are auto-approved without user interaction. Enabled by the `--dangerously-skip-permissions` CLI flag. See the warning below before using this.
+  </Card>
+  <Card title="auto" icon="wand-magic-sparkles">
+    Automated mode for headless / non-interactive sessions. A classifier and hook system attempt to auto-resolve permissions; prompts that cannot be auto-resolved are rejected rather than displayed.
+  </Card>
+</CardGroup>
+
+The `ToolPermissionContext` also carries per-session rule lists that refine behavior regardless of mode:
+
+| Rule list | Effect |
+|---|---|
+| `alwaysAllowRules` | Patterns that are always approved without prompting |
+| `alwaysDenyRules` | Patterns that are always rejected |
+| `alwaysAskRules` | Patterns that always prompt, even in auto mode |
+
+## The Permission Check Flow
+
+Every tool invocation follows this sequence before `call()` runs:
+
+<Steps>
+  <Step title="checkPermissions() on the tool">
+    The tool's own `checkPermissions()` method runs first. It returns a `PermissionResult` that may be `allow`, `ask`, or `deny` based on tool-specific logic.
+  </Step>
+  <Step title="Rule matching">
+    The result is checked against `alwaysAllowRules`, `alwaysDenyRules`, and `alwaysAskRules` in `ToolPermissionContext`. Matching rules short-circuit the remaining checks.
+  </Step>
+  <Step title="Hook execution (runHooks)">
+    Any registered `PermissionRequest` hooks run next. A hook can `allow`, `deny`, or pass through to the next step. Hooks are defined in `.claude/settings.json` or via the hooks API.
+  </Step>
+  <Step title="Classifier (BASH_CLASSIFIER feature gate)">
+    When enabled, the `BashTool` classifier runs for bash commands, consulting a prompt-rule model to auto-approve safe commands.
+  </Step>
+  <Step title="User prompt or auto-resolution">
+    If no prior step resolved the decision, the system either shows an interactive confirmation dialog (interactive mode) or auto-denies (non-interactive / `shouldAvoidPermissionPrompts`).
+  </Step>
+</Steps>
+
+## What Triggers a Permission Prompt
+
+<AccordionGroup>
+  <Accordion title="Bash commands (BashTool)">
+    All shell commands require a permission prompt in default mode. The prompt shows the exact command Claude intends to run. You can approve, deny, or modify the command before it executes.
+  </Accordion>
+  <Accordion title="File writes (FileWriteTool, FileEditTool)">
+    Creating or modifying files always asks for confirmation. The prompt shows the file path and, for edits, a diff of the proposed change.
+  </Accordion>
+  <Accordion title="Web requests (WebFetchTool, WebSearchTool)">
+    Fetching URLs or performing web searches triggers a prompt so you can verify the destination before data leaves your machine.
+  </Accordion>
+  <Accordion title="Sub-agent spawning (AgentTool)">
+    Spawning a sub-agent prompts for approval in default mode. Sub-agents run with their own permission context and may prompt you independently.
+  </Accordion>
+  <Accordion title="Destructive operations">
+    Tools that declare `isDestructive()` returning `true` are always highlighted in the UI, regardless of mode.
+  </Accordion>
+</AccordionGroup>
+
+## Approving and Denying
+
+When a permission prompt appears in the REPL:
+
+- **Approve** — Claude executes the tool with the shown input.
+- **Approve always** — adds the pattern to `alwaysAllowRules`, persisted to `~/.claude/settings.json` so the same class of action is auto-approved in future sessions.
+- **Deny** — the tool receives a `REJECT_MESSAGE` result and Claude is informed the action was not permitted. Claude will typically offer an alternative approach.
+- **Deny with feedback** — you can type a reason alongside the denial. The reason is included in the rejection message so Claude can adjust its approach.
+
+When a permission is denied in a sub-agent context, the sub-agent receives a `SUBAGENT_REJECT_MESSAGE` and the rejection is propagated up to the parent.
+
+## Plan Mode
+
+Plan mode lets Claude think and plan without executing anything. You can enter it manually or Claude can enter it autonomously via `EnterPlanModeTool`.
+
+```
+/plan        # enter plan mode from the REPL
+```
+
+While in plan mode:
+- Claude can call read-only tools (file reads, searches).
+- Any tool that would normally require a permission prompt is blocked.
+- Claude presents its proposed steps as a plan for you to review.
+- `ExitPlanModeTool` (or your `/plan` toggle) restores the previous permission mode.
+
+The previous permission mode is stored in `ToolPermissionContext.prePlanMode` and restored exactly on exit.
+
+## Bypass Permissions
+
+<Warning>
+  `--dangerously-skip-permissions` disables **all** permission prompts. Claude will execute bash commands, write files, and make web requests without asking. Only use this in fully isolated environments (e.g., containers, sandboxed VMs) where unreviewed execution is acceptable.
+</Warning>
+
+```bash
+claude --dangerously-skip-permissions "refactor the entire auth module"
+```
+
+The `isBypassPermissionsModeAvailable` field on `ToolPermissionContext` controls whether this mode can be activated. Organization policy can lock this to `false`.
+
+## Organization Policy Limits
+
+The `policyLimits` service (`src/services/policyLimits/`) enforces org-level restrictions. Policies are delivered via `remoteManagedSettings` and can:
+
+- Force a specific permission mode.
+- Disable `bypassPermissions` mode entirely (`isBypassPermissionsModeAvailable: false`).
+- Populate `alwaysDenyRules` with patterns your organization has blocked.
+- Strip dangerous rules that would otherwise be inherited from user settings (`strippedDangerousRules`).
+
+Policy settings take precedence over user settings and cannot be overridden locally.
+
+## Tips for Safe Use
+
+<Tip>
+  Use `alwaysAllowRules` for commands you run constantly in a project (e.g., `npm test`, `git status`). Add them once via the "Approve always" dialog and Claude will never ask again.
+</Tip>
+
+<Tip>
+  Run Claude in plan mode first for large refactors. Review the plan, ask clarifying questions, then exit plan mode to let Claude execute.
+</Tip>
+
+<Tip>
+  In CI pipelines, use `--dangerously-skip-permissions` only inside ephemeral containers. Never run it on a developer machine with access to production credentials.
+</Tip>
+
+<Note>
+  When `shouldAvoidPermissionPrompts` is `true` (set automatically for background agents that have no UI), any tool requiring a prompt is auto-denied rather than hanging indefinitely.
+</Note>

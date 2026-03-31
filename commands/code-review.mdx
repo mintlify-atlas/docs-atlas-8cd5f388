@@ -1,0 +1,88 @@
+---
+title: "Code Review"
+description: "Use Claude Code to review pull requests and analyze code quality."
+---
+
+Claude Code can review pull requests and analyze code for bugs, security issues, and improvements — directly in the terminal.
+
+## Reviewing a pull request
+
+The `/review` command reviews a GitHub pull request. It uses `gh pr list` and `gh pr diff` under the hood, so you need the [GitHub CLI](https://cli.github.com) installed and authenticated.
+
+Run `/review` with no arguments to pick from open PRs interactively:
+
+```
+> /review
+```
+
+Or pass a PR number directly:
+
+```
+> /review 123
+```
+
+Claude will:
+1. Fetch the PR details and diff via `gh pr view` and `gh pr diff`
+2. Analyze the changes for code quality, correctness, and potential issues
+3. Present a structured review with an overview, specific suggestions, and risk notes
+
+## What Claude checks
+
+Claude's PR review covers:
+
+- **Code correctness** — Logic errors, edge cases, null handling
+- **Security** — Common vulnerability patterns, hardcoded secrets
+- **Performance** — Inefficient patterns, potential bottlenecks
+- **Test coverage** — Whether the changes are adequately tested
+- **Project conventions** — Consistency with the surrounding codebase style
+
+## Reviewing PR comments
+
+The `/pr_comments` command fetches open GitHub PR review comments and displays them with context:
+
+```
+> /pr_comments
+```
+
+After reviewing comments, ask Claude to address them:
+
+```
+> Address the reviewer's comment about error handling in the login function
+> Fix all the PR comments related to type safety
+```
+
+## Ad-hoc code review
+
+You can also ask Claude to review code directly in conversation without using `/review`:
+
+```
+> Review this file for security issues: src/utils/sql.ts
+> Does this implementation handle all edge cases?
+> Check the authentication module for potential vulnerabilities
+```
+
+This uses Claude's reasoning directly rather than the `gh` CLI workflow.
+
+## Typical review workflow
+
+<Steps>
+  <Step title="Make your changes and push">
+    Push your branch and open a PR on GitHub.
+  </Step>
+  <Step title="Run /review">
+    Pass the PR number to get Claude's assessment:
+    ```
+    > /review 42
+    ```
+  </Step>
+  <Step title="Address issues">
+    Ask Claude to fix issues it found, or fix them yourself.
+  </Step>
+  <Step title="Commit and push">
+    Run `/commit` and push the follow-up changes.
+  </Step>
+</Steps>
+
+<Note>
+  `/review` requires the GitHub CLI (`gh`) to be installed and authenticated. Run `gh auth status` to check. If you don't have `gh`, use ad-hoc review by describing the code you want reviewed directly.
+</Note>

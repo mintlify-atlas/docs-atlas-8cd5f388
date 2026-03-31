@@ -1,0 +1,137 @@
+---
+title: "Settings"
+description: "Configure Claude Code behavior through the /config command and configuration files."
+---
+
+Claude Code stores configuration in `~/.claude/` and supports both interactive configuration via `/config` and direct file editing.
+
+## Interactive configuration
+
+The `/config` command opens an interactive settings panel where you can browse and change all settings:
+
+```
+> /config
+```
+
+The panel lets you navigate settings with arrow keys and toggle or edit values interactively. It is also aliased as `/settings`.
+
+## Configuration options
+
+### Model selection
+
+Switch models with `/model`:
+
+```
+> /model
+```
+
+This opens a model picker showing available Claude models. Available models depend on your Anthropic subscription.
+
+You can also specify a model at startup:
+
+```bash
+claude --model claude-sonnet-4-6    # full model ID
+claude --model sonnet               # alias for the latest Sonnet
+claude --model opus                 # alias for the latest Opus
+```
+
+### Permission mode
+
+Controls how Claude handles tool permission prompts:
+
+| Mode | Behavior |
+|------|----------|
+| `default` | Prompts for approval on each new tool/pattern |
+| `plan` | Plans actions but requires explicit approval to execute |
+| `auto` | Auto-approves based on learned patterns |
+| `bypassPermissions` | Skips all permission checks (use with caution) |
+
+Set via the `--permission-mode` CLI flag at startup, or changed interactively from the `/config` panel.
+
+### Theme
+
+Change the terminal color theme:
+
+```
+> /theme
+```
+
+Themes affect syntax highlighting and UI element colors throughout the REPL.
+
+### Vim mode
+
+Enable vim keybindings for the input prompt:
+
+```
+> /vim
+```
+
+Toggle off by running `/vim` again.
+
+### Effort level
+
+Adjust how much reasoning Claude applies:
+
+```
+> /effort
+```
+
+Higher effort enables extended thinking for complex architectural decisions. Lower effort gives faster responses for simple tasks.
+
+### Output style
+
+Change how Claude formats responses:
+
+```
+> /output-style
+```
+
+## CLI flags
+
+Pass flags when launching Claude Code:
+
+```bash
+# Skip permission prompts (use carefully)
+claude --dangerously-skip-permissions
+
+# Start with a specific model
+claude --model claude-sonnet-4-6
+
+# Non-interactive: print response and exit
+claude -p "Summarize the main.ts file"
+
+# Continue the most recent conversation
+claude --continue
+```
+
+## Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `ANTHROPIC_API_KEY` | API key (overrides keychain) |
+| `ANTHROPIC_MODEL` | Default model to use (e.g. `claude-sonnet-4-6`) |
+| `HTTP_PROXY` / `HTTPS_PROXY` | Proxy server for all requests |
+| `NO_PROXY` | Hosts to bypass proxy |
+
+<Note>
+  On macOS, Claude Code uses the system Keychain to store credentials securely. The `ANTHROPIC_API_KEY` environment variable overrides the Keychain value if set.
+</Note>
+
+## Project-level configuration
+
+Place a `CLAUDE.md` file in your project root to give Claude persistent context about your project:
+
+```markdown
+# My Project
+
+## Tech stack
+- Node.js 20, TypeScript, PostgreSQL
+- Testing: Vitest
+
+## Conventions
+- Use named exports, not default exports
+- All async functions must handle errors explicitly
+- Database queries go through the repository layer only
+```
+
+Claude reads `CLAUDE.md` automatically at the start of every session in that directory.

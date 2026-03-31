@@ -1,0 +1,70 @@
+---
+title: "Remote Sessions"
+description: "Run Claude Code sessions remotely and share sessions with teammates."
+---
+
+Claude Code supports remote session modes for running on remote servers, sharing sessions, and connecting from mobile or desktop apps.
+
+## Session sharing
+
+Share a read-only link to your current session:
+
+```
+> /share
+```
+
+This generates a URL that others can view — useful for showing Claude's work to teammates or getting async feedback.
+
+## SSH sessions
+
+Claude Code can run over SSH, letting you use it on remote development servers:
+
+```bash
+ssh user@remote-server
+claude
+```
+
+The `useSSHSession` hook handles SSH-specific session management, including connection state and reconnection.
+
+## Remote triggers
+
+The `RemoteTriggerTool` allows external systems to trigger Claude Code actions via a webhook or remote call. This enables CI/CD integrations where Claude Code can respond to events (e.g., a failing test run triggering an auto-fix attempt).
+
+## Desktop and mobile handoff
+
+Hand off a terminal session to the Claude desktop or mobile app:
+
+```
+> /desktop
+> /mobile
+```
+
+These commands initiate a session transfer so you can continue the conversation in a richer interface while preserving the full conversation context.
+
+## Resuming sessions
+
+Resume a previous conversation:
+
+```
+> /resume
+```
+
+This shows recent sessions and lets you pick one to continue. Claude reloads the conversation history and any active task state.
+
+```bash
+# Resume directly from the CLI
+claude --continue
+```
+
+## Server mode
+
+Claude Code includes a `server/` subsystem for running in headless server mode — useful for CI/CD pipelines and automation scenarios where no interactive terminal is available.
+
+```bash
+# Non-interactive: run a prompt and exit
+claude -p "Run the test suite and fix any failures"
+```
+
+<Tip>
+  Use `claude -p "..."` for scripted, non-interactive use in CI pipelines. It prints the response and exits with a 0/non-zero status code based on success.
+</Tip>
